@@ -172,5 +172,37 @@ Over the 8 weeks of observation period, the experiment group seems to have an in
 
 
 
+## Problem 3
+
+write a function 
+```{r}
+simulation = function(n = 30, mu, sigma = 5){
+  
+ data = 
+    tibble(
+      x = rnorm(n = 30, mean = mu, sd = sigma)
+    )
+  
+ test = 
+   t.test(data, conf.level = 0.95) %>% 
+   broom::tidy() 
+  
+  data %>% 
+    summarise(
+     mu_hat = mean(x), 
+     p_value = test$p.value
+    )
+  
+}
+```
+
+
+do the iteration--generate 5000 dataset (mu = 0)
+```{r}
+simulation_results = 
+  rerun(5000, simulation(mu = 0)) %>% 
+  bind_rows()
+```
+
 
 
