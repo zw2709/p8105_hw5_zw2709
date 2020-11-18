@@ -229,7 +229,7 @@ simulation_result =
 * first plot
 Make a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of μ on the x axis. Describe the association between effect size and power.
 
-```{r}
+```{r, message= FALSE}
 reject = 
   simulation_result %>% 
   filter(p_value < 0.05) %>% 
@@ -250,7 +250,7 @@ reject %>%
   
   ggplot(aes(x = mu, y = reject_prop)) +
   geom_point(alpha = 0.5, size = 0.1)+
-  geom_path()
+  geom_path()+
   
   labs(
     title = "plot showing the proportion of rejection and true mu value",
@@ -267,6 +267,54 @@ With the increase of the true value of mu, the proportion of rejection(times of 
 
 
 
+* second plot
+```{r}
+average_mu = 
+  simulation_result %>% 
+  
+  group_by(mu) %>% 
+  summarise(
+    average_mu = mean(mu_hat)
+  )
 
 
+average_mu_reject = 
+  simulation_result %>% 
+  filter(p_value < 0.05) %>%
+  
+  group_by(mu) %>% 
+  summarise(
+    average_mu_reject = mean(mu_hat)
+  )
+  
+```
+
+
+```{r}
+average_mu %>% 
+  ggplot(aes(x = mu, y = average_mu)) +
+  geom_point(alpha = 0.5, size = 0.1)+
+  geom_path()+
+  
+  labs(
+    title = "average u_hat and true mu value",
+    x = "mu values",
+    y = "average estimate of u_hat"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+average_mu_reject %>% 
+  ggplot(aes(x = mu, y = average_mu_reject)) +
+  geom_point(alpha = 0.5, size = 0.1)+
+  geom_path()+
+  
+  labs(
+    title = "average u_hat in samples rejecting the null and true mu value",
+    x = "mu values",
+    y = "average estimate of u_hat in samples rejecting the null"
+  ) +
+  theme_minimal()
+```
 
