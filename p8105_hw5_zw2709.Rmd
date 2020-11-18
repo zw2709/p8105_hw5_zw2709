@@ -199,10 +199,74 @@ simulation = function(n = 30, mu, sigma = 5){
 
 do the iteration--generate 5000 dataset (mu = 0)
 ```{r}
-simulation_results = 
+results_mu_0 = 
   rerun(5000, simulation(mu = 0)) %>% 
   bind_rows()
+
+results_mu_0
 ```
+
+
+
+Repeat the above for μ={1,2,3,4,5,6}
+
+```{r}
+simulation_result = 
+  tibble(
+    mu = c(1,2,3,4,5,6)
+  ) %>% 
+  
+  mutate(
+    output_lists = map(.x = mu, ~ rerun(5000, simulation(mu = .x))),
+    estimate_df = map(output_lists, bind_rows)
+  ) %>% 
+  
+  select(-output_lists) %>% 
+  unnest(estimate_df)
+```
+
+
+* first plot
+Make a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of μ on the x axis. Describe the association between effect size and power.
+
+```{r}
+reject = 
+  simulation_result %>% 
+  filter(p_value < 0.05) %>% 
+  
+  group_by(mu) %>% 
+  summarize(
+    reject = n()
+  ) %>% 
+  mutate(
+    reject_prop = reject / 5000
+  )
+
+reject
+```
+
+```{r}
+reject %>% 
+  
+  ggplot(aes(x = mu, y = reject_prop)) +
+  geom_point(alpha = 0.5, size = 0.1)+
+  geom_path()
+  
+  labs(
+    title = "plot showing the proportion of rejection and true mu value",
+    x = "mu values",
+    y = "proportion of rejection"
+  ) +
+  theme_minimal()
+  
+```
+
+With the increase of the true value of mu, the proportion of rejection(times of rejecting the null hypothesis) increases. When mu is equal to 6, it's certain to have rejection(proportion equals to 1). The power(probability of rejecting false null hypothesis) seems to be positively associated with the effect size.
+
+
+
+
+
 
 
 
