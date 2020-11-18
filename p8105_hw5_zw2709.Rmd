@@ -1,0 +1,176 @@
+---
+title: "p8105_hw5_zw2709"
+output: github_document
+---
+
+```{r setup, include = FALSE}
+library(tidyverse)
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+scale_colour_discrete = scale_color_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+## Problem 1
+
+Read in the data.
+
+```{r, message= FALSE}
+homicide_df = 
+  read_csv("homicide-data.csv") %>% 
+  mutate(
+    city_state = str_c(city, state, sep = "_"),
+    resolved = case_when(
+      disposition == "Closed without arrest" ~ "unsolved",
+      disposition == "Open/No arrest"        ~ "unsolved",
+      disposition == "Closed by arrest"      ~ "solved",
+    )
+  ) %>% 
+  select(city_state, resolved) %>% 
+  filter(city_state != "Tulsa_AL")
+```
+
+
+Let's look at this a bit
+
+```{r}
+aggregate_df = 
+  homicide_df %>% 
+  group_by(city_state) %>% 
+  summarize(
+    hom_total = n(),
+    hom_unsolved = sum(resolved == "unsolved")
+  )
+```
+
+Can I do a prop test for a single city?
+
+```{r}
+prop.test(
+  aggregate_df %>% filter(city_state == "Baltimore_MD") %>% pull(hom_unsolved), 
+  aggregate_df %>% filter(city_state == "Baltimore_MD") %>% pull(hom_total)) %>% 
+  broom::tidy()
+```
+
+Try to iterate ........
+
+```{r}
+results_df = 
+  aggregate_df %>% 
+  mutate(
+    prop_tests = map2(.x = hom_unsolved, .y = hom_total, ~prop.test(x = .x, n = .y)),
+    tidy_tests = map(.x = prop_tests, ~broom::tidy(.x))
+  ) %>% 
+  select(-prop_tests) %>% 
+  unnest(tidy_tests) %>% 
+  select(city_state, estimate, conf.low, conf.high)
+```
+
+
+
+```{r}
+results_df %>% 
+  mutate(city_state = fct_reorder(city_state, estimate)) %>% 
+  ggplot(aes(x = city_state, y = estimate)) +
+  geom_point() + 
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
+
+
+
+
+
+
+## Problem 2 
+
+
+import one dataset 
+
+```{r}
+data_1 = read_csv("data/con_01.csv")
+```
+
+
+create the dataframe 
+
+```{r, error = TRUE, message= FALSE}
+path_df = 
+  tibble(
+    path = list.files("data"),
+  ) %>%    # dataframe containing all file names
+  mutate(
+    path = str_c("data/", path),
+    data = map(path, read_csv)) %>%  # Iterate over file names and read in data for each subject, saved in the new variable "data"
+  unnest(data)
+
+```
+
+The dataframe containing data from all participants is as follows:
+```{r, message = FALSE}
+path_df
+```
+
+Tidy the dataframe
+```{r}
+df = 
+  path_df %>% 
+  mutate(
+    path = str_replace(path, "data/", ""),
+    path = str_replace(path, ".csv", "")
+  ) %>% 
+  separate(path, into = c("arm", "subjectID"), sep = "_") %>% 
+  mutate(
+    arm = str_replace(arm, "con", "control"),
+    arm = str_replace(arm, "exp", "experiment"),
+    subjectID = as.numeric(subjectID)
+  ) %>% 
+  
+  pivot_longer(
+    week_1:week_8,
+    names_to = "weeks",
+    values_to = "observations"
+  ) %>% 
+  
+  mutate(
+    weeks = str_replace(weeks, "week_", ""),
+    weeks = as.numeric(weeks)
+  )
+
+df
+```
+
+
+Make a spaghetti plot showing observations on each subject over time
+
+```{r}
+df %>% 
+  
+  ggplot(aes(x = weeks, y = observations, color = subjectID)) +
+  geom_point(alpha = 0.5, size = 0.1)+
+  geom_path()+
+  facet_grid(. ~ arm)+
+  
+  labs(
+    title = "plot showing observations on each subject over time",
+    x = "weeks",
+    y = "observations"
+  ) +
+  theme_minimal()
+  
+```
+
+Over the 8 weeks of observation period, the experiment group seems to have an increasing tread with some fluctuations. The control group have changing values during the period, but the values from the beginning and the end do not have a large difference.
+
+
+
+
+
