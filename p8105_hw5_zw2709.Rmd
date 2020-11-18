@@ -318,3 +318,21 @@ average_mu_reject %>%
   theme_minimal()
 ```
 
+The average of mu hat across all data is the same as the true value of u (regardless of the values of true mu), so the plot shows the straight line.
+
+
+
+The sample average of mu_hat across tests for which the null is rejected is equal to the true value of mu when mu equals to 4, 5, 6 (that part is straight line). But for smaller values of true mu values(mu = 1, 2, 3), the average estimate of mu_hat across tests rejecting the null is larger than the corresponding true mean, and with increase of true mu values the difference has the decreasing trend (plot has a curve with decreasing slope).
+
+
+
+Reason:
+
+From the previous study and plot, with the increase of the true value of mu, the proportion of rejection(times of rejecting the null hypothesis) increases. So when true value of mu increase, proportion of rejection increases and difference between sample across rejection tests and sample across all tests decreases. Since average u_hat across all data is equal to true mu, the increasing true mu values make the average u_hat across rejection tests be approximated to true mu values.
+
+When true mu has large values(mu = 4,5,6), the proportion of rejection is approximately to value 1, meaning samples from rejection group are approximated to the total corresponding sample. Under the circumstances, average u_hat across rejection tests is then equal to true mu values.
+
+
+
+
+
